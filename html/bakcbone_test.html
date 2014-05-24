@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="../libs/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/common.css">
+
+    <!-- default load javascript -->
+    <script type="text/javascript" src="../libs/jquery/jquery-2.0.3.min.js"></script>
+    <script type="text/javascript" src="../libs/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../libs/handlebars/handlebars.js"></script>
+    <script type="text/javascript" src="../libs/underscore/underscore-min.js"></script>
+    <script type="text/javascript" src="../libs/backbone/backbone-min.js"></script>
+
+</head>
+
+<body>
+	backbone-save-test.html の一部
+
+<table class="table table-bordered">
+  <thead>
+  </thead>
+  <tbody>
+    <tr>
+      <th>名前</th>
+      <td><input type="text" id="user_name"></td>
+    </tr>
+  </tbody>
+</table>
+<input type="button" id="btn_send" value="送信">
+<br><br>
+ 
+<!-- テンプレート(post_data_template)を表示する領域 -->
+<div id="post_data_area"></div>
+<!-- /テンプレート(post_data_template)を表示する領域 -->
+ 
+<!-- レスポンスを受け取って表示するテンプレート -->
+<script type="text/template" id="post_data_template">
+  <table class="table table-bordered">
+    <caption>POSTされたデータ</caption>
+    <thead>
+      <tr><th>名前</th><th>住所</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><%= user_name %></td>
+      </tr>
+    </tbody>
+  </table>
+</script>
+<!-- /レスポンスを受け取って表示するテンプレート -->
+<script>
+
+// veiewからModel経由でデータを保存する
+$(function() {
+
+    var Student = Backbone.Model.extend({
+        // ModelのリソースURI（本サンプルでは、Model.save()によるPOSTリクエスト先）
+        urlRoot : '../../test_api/post.php',
+        defaults : function() {
+            return {
+                'name' : null,
+            };
+        }
+    });
+
+    var BtnSend = Backbone.View.extend({
+        el : $('#btn_send'),
+        model : Student,
+        initialize : function(options) {
+            this.model = options.model;
+        },
+        events: {
+            'click' : 'click'
+        },
+        click : function(e) {
+            var reqData = {
+                'user_name' : $('#user_name').val(),
+            };
+            // 送信するデータをModelにセット
+            this.model.set(reqData);
+            // save()を呼び出すと、model.urlRootにPOSTリクエストが送信される
+            this.model.save(null, {
+                success : function(model, resp) {
+                	console.log(resp);
+                    // レスポンスを受け取ってalert表示する
+                    alert('名前：'+resp.user_name+'を受け付けました。');
+                    // レスポンスを受け取ってテンプレートに表示する
+                    $('#post_data_area').html(_.template($('#post_data_template').html(), resp));
+                },
+                error : function(model, resp) {
+                    alert('エラー：送信に失敗しました。');
+                    return false;
+                }
+            });
+        }
+    });
+
+    var user = new Student();
+    var btnSend = new BtnSend({model: user});
+});
+
+//// Modelの例
+var Staff = Backbone.Model.extend({
+    defaults: {
+        "name": "",
+        "age": 0,
+        "updateTime": new Date()
+    },
+    // constructerが使える
+    initialize: function() {
+        console.log("Staff[" + this.cid + "]: " + JSON.stringify(this));
+    }
+});
+ 
+var tmpStaff = new Staff();
+tmpStaff.set({name: "Murata", age: 15, id: 101});
+ 
+console.log("Staff[" + tmpStaff.cid + "]: " + JSON.stringify(tmpStaff));
+ 
+var tmpStaff2 = new Staff({name: "Kenichiro", age: 35, id: 102});
+
+//// collections
+var collections = new Backbone.Collection([tmpStaff, tmpStaff2]);
+console.log("objs.get(cid): " + JSON.stringify(collections.get(102)));
+console.log("objs.at(index): " + JSON.stringify(collections.at(0)));
+
+// sort
+// sort and comparator
+collections.comparator = function(item) {
+	//sort key の指定
+    return item.get("age");
+};
+collections.sort();
+console.log("After sort objs: " + JSON.stringify(collections));
+
+// 追加と削除はaddとremove
+collections.add({name: "Jun", age: 10, id: 104});
+collections.add({name: "Kart", age: 10, id: 105});
+
+collections.each(function(item, index){
+    console.log("each(" + index + "): " + JSON.stringify(item));
+});
+// findだと最初に見つかった一つ、filterだと複数
+var tmpObj = collections.find(function(item) {
+    return item.get("age") === 10;
+});
+console.log("find result: " + JSON.stringify(tmpObj));
+
+// 各要素へのなにがしして取得、特定の要素のみ
+// map
+tmpObj = collections.map(function(item){
+    return item.get("age") + 1;
+});
+console.log("map result: " + JSON.stringify(tmpObj));
+
+
+</script>	
+</body>
+</html>

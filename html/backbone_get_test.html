@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="../libs/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/common.css">
+
+    <!-- default load javascript -->
+    <script type="text/javascript" src="../libs/jquery/jquery-2.0.3.min.js"></script>
+    <script type="text/javascript" src="../libs/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../libs/handlebars/handlebars.js"></script>
+    <script type="text/javascript" src="../libs/underscore/underscore-min.js"></script>
+    <script type="text/javascript" src="../libs/backbone/backbone-min.js"></script>
+
+</head>
+
+<body>
+<h1>ユーザー一覧</h1>
+
+ID：<input type="text" id="id">
+<a id="btn_show" class="btn btn-primary btn-middle">表示</a>
+<br><br>
+
+<table class="table table-bordered table-striped table-condensed rule-list">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>名前</th>
+    </tr>
+  </thead>
+  <tbody id="user_list_body">
+
+    <tr>
+      <td colspan="4">「表示」ボタンを押してください（IDに入力が無い場合は全ユーザーを表示します）</td>
+    </tr>
+
+  </tbody>
+</table>
+<div id="loading" style="padding:10px;"></div>
+
+<script type="text/template" id="user_row_template">
+  <tr>
+    <td><%= id %></td>
+    <td><%= name %></td>
+  </tr>
+</script>
+<script type="text/template" id="user_norow_template">
+  <tr>
+    <td colspan="4">データがありません</td>
+  </tr>
+</script>
+
+<script>
+
+// veiewからModel経由でデータを保存する
+$(function() {
+ // ユーザー情報を格納するモデル
+    var User = Backbone.Model.extend({
+        // 属性指定が無いインスタンス生成の際のデフォルト属性（本サンプルでは無くてもいい）
+        defaults : function() {
+            return {
+                'data' : {
+                    'id' : null,
+                    'name' : null
+                }
+            };
+        }
+    });
+
+    // ユーザー情報モデルを複数格納するためのコレクション
+    var UserList = Backbone.Collection.extend({
+        // リソースから取得した結果を格納するモデル
+        model : User,
+        // モデルの内容取得先リソース
+        url : '../../test_api/get.php',
+        // リソースから取得した結果をモデルに格納する前に参照できる。
+        // returnされた値のみがモデルに格納される
+        parse : function(resp) {
+            if (resp.error) {
+                // エラーがあればエラーメッセージ表示
+                alert(resp.error.message);
+            }
+            // モデルに格納するデータ部分を返す
+            return resp.data;
+        }
+    });
+
+    // ユーザー一覧表示領域のビュー
+    var UserView = Backbone.View.extend({
+        el : '#user_list_body',
+        model : User,
+        collection : UserList,
+        initialize : function(options) {
+            _.bindAll(this, 'render');
+            this.reset();
+        },
+        reset : function() {
+            this.collection = new UserList();
+        },
+        render : function() {
+            $(this.el).empty();
+            // リソースから取得
+            // （collectionのurlにGETリクエストを送信する）
+            this.collection.fetch({
+                data : {
+                    id : $('#id').val()
+                },
+                dataType : 'json',
+                success : $.proxy(this.add, this)
+            });
+        },
+        add : function(collection, resp) {
+        	console.log(resp);
+            var that = this;
+            if (collection.length == 0) {
+                // データが無い →専用のテンプレートを表示
+                $(that.el).append(_.template($('#user_norow_template').html(), null));
+                return;
+            }
+            collection.each(function(model) {
+                // コレクションに格納されたモデルの内容を1件ずつテンプレートに当てはめて表示
+                $(that.el).append(_.template($('#user_row_template').html(), model.attributes));
+            });
+        }
+    });
+
+    var BtnShowView = Backbone.View.extend({
+        el : $('#btn_show'),
+        userView : null,
+        initialize : function(data) {
+            this.userView = data.userView;
+        },
+        events: {
+            // clickイベントの登録
+            'click' : 'click'
+        },
+        click : function(e) {
+            // ユーザー一覧を描画する
+            this.userView.render();
+        }
+    });
+
+    var userView = new UserView();
+    var btnShowView = new BtnShowView({userView: userView});
+});
+
+</script>	
+</body>
+</html>

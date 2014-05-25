@@ -58,10 +58,11 @@
 // veiewからModel経由でデータを保存する
 $(function() {
 
+	// modelとのbinding
     var Student = Backbone.Model.extend({
         // ModelのリソースURI（本サンプルでは、Model.save()によるPOSTリクエスト先）
         urlRoot : '../../test_api/post.php',
-        defaults : function() {
+        defaults : function() {//データが指定されなかった場合の処理
             return {
                 'name' : null,
             };

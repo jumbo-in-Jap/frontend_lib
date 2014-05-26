@@ -39,6 +39,7 @@ ID：<input type="text" id="id">
     </tr>
 
   </tbody>
+  <a id="btn_update_show" class="btn btn-primary btn-middle">もっと見る</a>
 </table>
 <div id="loading" style="padding:10px;"></div>
 
@@ -56,6 +57,7 @@ ID：<input type="text" id="id">
 
 <script>
 
+var _offset = 0;
 // veiewからModel経由でデータを保存する
 $(function() {
  // ユーザー情報を格納するモデル
@@ -113,23 +115,36 @@ $(function() {
                 success : $.proxy(this.add, this)
             });
         },
+        more_load : function()
+        {
+            this.collection.fetch({
+                data : {
+                    offset : _offset
+                },
+                dataType : 'json',
+    			update: true,
+    			remove: false,
+                success : $.proxy(this.add, this)
+            });        	
+        },
         add : function(collection, resp) {
-        	console.log(resp);
+        	console.log(collection);
             var that = this;
             if (collection.length == 0) {
                 // データが無い →専用のテンプレートを表示
                 $(that.el).append(_.template($('#user_norow_template').html(), null));
                 return;
             }
-            collection.each(function(model) {
-                // コレクションに格納されたモデルの内容を1件ずつテンプレートに当てはめて表示
+            var renderCollection = new UserList(collection.slice(_offset, _offset + 2));
+            renderCollection.each(function(model) {
                 $(that.el).append(_.template($('#user_row_template').html(), model.attributes));
             });
+            _offset += resp.data.length;
         }
     });
 
     var BtnShowView = Backbone.View.extend({
-        el : $('#btn_show'),
+        el : $('#btn_update_show'),
         userView : null,
         initialize : function(data) {
             this.userView = data.userView;
@@ -140,9 +155,25 @@ $(function() {
         },
         click : function(e) {
             // ユーザー一覧を描画する
-            this.userView.render();
+            this.userView.more_load();
         }
     });
+
+    var BtnMoreShowView = Backbone.View.extend({
+        el : $('#btn_more_show'),
+        userView : null,
+        initialize : function(data) {
+            this.userView = data.userView;
+        },
+        events: {
+            // clickイベントの登録
+            'click' : 'click'
+        },
+        click : function(e) {
+            this.userView.more_load();
+        }
+    });
+    
 
     var userView = new UserView();
     var btnShowView = new BtnShowView({userView: userView});

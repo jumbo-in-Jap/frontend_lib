@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="../libs/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/common.css">
+
+    <!-- default load javascript -->
+    <script type="text/javascript" src="../libs/jquery/jquery-2.0.3.min.js"></script>
+    <script type="text/javascript" src="../libs/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../libs/handlebars/handlebars.js"></script>
+    <script type="text/javascript" src="../libs/underscore/underscore-min.js"></script>
+    <script type="text/javascript" src="../libs/backbone/backbone-min.js"></script>
+
+</head>
+
+<body>
+	<form action="/login" id="login-form">
+	  Username: <input type="text" id="username"><br>
+	  Password: <input type="password" id="password"><br>
+	  <button id="login" disabled="true">Login</button>
+	</form>
+
+<script>
+
+$(function(){
+	var Credentials = Backbone.Model.extend({
+	 
+	  initialize: function(){
+	    this.bind("change", this.attributesChanged);
+	  },
+	 
+	  attributesChanged: function(){
+	    var valid = false;
+	    if (this.get('username') && this.get('password'))
+	      valid = true;
+	    this.trigger("validated", valid);
+	  }
+	});
+
+	var LoginView = Backbone.View.extend({
+	  el: "#login-form",
+	 
+	  events: {
+	    "click #login": "performLogin",
+	    "keydown #username": "setUsername",
+	    "change #password": "setPassword"
+	  },
+	 
+	  initialize: function(){
+	    this.username = $("#username");
+	    this.password = $("#password");
+	    this.loginButton = $("#login");
+	  },
+	 
+	  validated: function(valid){
+	    if (valid){
+	      this.view.loginButton.removeAttr("disabled");
+	    } else {
+	      this.view.loginButton.attr("disabled", "true");
+	    }
+	  },
+	 
+	  setUsername: function(e){
+	  	console.log(this.username.val());
+	    this.model.set({username: this.username.val()});
+	  },
+	 
+	  setPassword: function(e){
+	  	console.log(this.password.val());
+	    this.model.set({password: this.password.val()});
+	  },
+	 
+	  performLogin: function(){
+	    var user= this.model.get('username');
+	    var pword = this.model.get('password');
+	    alert("You logged in as " + user + " and a password of " + pword);
+	    return false;
+	  }
+	});
+	var n = new LoginView();
+
+});
+
+</script>	
+</body>
+</html>

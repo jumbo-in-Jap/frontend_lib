@@ -20,8 +20,9 @@ try{
 //			        print($result['name'].'<br>');
 //		 }
 
-	//	echo json_encode($_POST);
+	//	echo json_encode($_POST);	
 
 		$reqData = json_decode(file_get_contents('php://input'), TRUE);
 		$respBody = array('user_name' => $reqData['user_name']);
 		echo json_encode($respBody);
+

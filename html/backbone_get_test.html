@@ -47,6 +47,7 @@ ID：<input type="text" id="id">
   <tr>
     <td><%= id %></td>
     <td><%= name %></td>
+    <td><input class="toggle" type="checkbox" /></td>
   </tr>
 </script>
 <script type="text/template" id="user_norow_template">
@@ -65,11 +66,16 @@ $(function() {
         // 属性指定が無いインスタンス生成の際のデフォルト属性（本サンプルでは無くてもいい）
         defaults : function() {
             return {
-                'data' : {
+                'data' : [{
                     'id' : null,
-                    'name' : null
-                }
+                    'name' : null,
+                    'done' : false
+                }]
             };
+        },
+        toggle: function() {
+        	console.log("toggle");
+        	this.done = !this.done;
         }
     });
 
@@ -78,7 +84,7 @@ $(function() {
         // リソースから取得した結果を格納するモデル
         model : User,
         // モデルの内容取得先リソース
-        url : '../../test_api/get.php',
+        url : '../test_api/backbone/get.php',
         // リソースから取得した結果をモデルに格納する前に参照できる。
         // returnされた値のみがモデルに格納される
         parse : function(resp) {
@@ -100,6 +106,12 @@ $(function() {
             _.bindAll(this, 'render');
             this.reset();
         },
+        events: {
+			"click .toggle"   : "toggleDone"
+		},
+		toggleDone: function() {
+			
+		},
         reset : function() {
             this.collection = new UserList();
         },
